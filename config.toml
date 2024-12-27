@@ -1,0 +1,8 @@
+[ecos]
+user = "admin"
+password = "password"
+base_url = "https://api-ecos-au.weiheng-tech.com/api"
+
+[app]
+default_mode = "self-sufficient"
+default_battery_level = 10

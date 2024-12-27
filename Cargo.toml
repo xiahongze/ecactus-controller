@@ -1,6 +1,10 @@
 [package]
-name = "ecactus-controller"
+name = "ecactus_controller"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+toml = "0.8.19"
+[dependencies.rocket]
+version = "0.5.1"
+features = ["json"]
