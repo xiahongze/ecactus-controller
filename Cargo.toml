@@ -5,6 +5,9 @@ edition = "2021"
 
 [dependencies]
 toml = "0.8.19"
+reqwest = { version = "0.12.10", features = ["json"] }
+base64 = "0.22.1"
+
 [dependencies.rocket]
 version = "0.5.1"
 features = ["json"]

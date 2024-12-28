@@ -6,6 +6,8 @@ mod models;
 mod routes;
 mod state;
 
+mod ecos;
+
 use crate::config::{read_config, Config};
 use crate::state::AppState;
 use rocket::tokio::sync::Mutex;
