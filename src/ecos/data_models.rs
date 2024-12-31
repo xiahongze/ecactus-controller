@@ -3,6 +3,7 @@
 
 use base64::engine::general_purpose;
 use base64::Engine;
+use chrono::{Local, Timelike};
 use rocket::serde::json::serde_json;
 use rocket::serde::{Deserialize, Serialize};
 
@@ -166,7 +167,7 @@ pub struct ChargeModeSettings {
     pub dischargingList: Vec<ChargeSchedule>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(crate = "rocket::serde", tag = "ecos")]
 pub struct ChargeSchedule {
     pub startHour: i32,
@@ -175,6 +176,25 @@ pub struct ChargeSchedule {
     pub endMinute: i32,
     pub power: i32,
     pub abandonPv: i32,
+}
+
+impl ChargeSchedule {
+    pub fn from_now(minutes: i64, power: i32) -> Self {
+        let local_time = Local::now();
+        let start_hour = local_time.hour();
+        let start_minute = local_time.minute();
+        let end_time = local_time + chrono::Duration::minutes(minutes);
+        let end_hour = end_time.hour();
+        let end_minute = end_time.minute();
+        ChargeSchedule {
+            startHour: start_hour as i32,
+            startMinute: start_minute as i32,
+            endHour: end_hour as i32,
+            endMinute: end_minute as i32,
+            power,
+            abandonPv: 0,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

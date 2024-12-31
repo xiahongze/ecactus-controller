@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+use crate::ecos::data_models::ChargeSchedule;
 use rocket::serde::de::DeserializeOwned;
 use rocket::serde::Deserialize;
 
@@ -17,10 +19,39 @@ pub struct EcosConfig {
 }
 
 #[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[serde(crate = "rocket::serde", default)]
 pub struct AppConfig {
-    pub default_mode: String,
-    pub default_battery_level: u8,
+    pub deviceId: String,
+    pub checkInterval: u64, // in seconds
+    pub chargeUseMode: i32,
+    pub minCapacity: i32,
+    pub maxFeedIn: i32,
+    pub dischargeToGridFlag: i32,
+    pub chargingList: Vec<ChargeSchedule>,
+    pub dischargingList: Vec<ChargeSchedule>,
+    pub epsBatteryMin: i32,
+}
+
+impl AppConfig {
+    pub fn new() -> Self {
+        AppConfig {
+            deviceId: "123456".to_string(),
+            checkInterval: 60 * 15, // 15 minutes
+            chargeUseMode: 0,
+            minCapacity: 10,
+            maxFeedIn: 100,
+            dischargeToGridFlag: 0,
+            chargingList: vec![],
+            dischargingList: vec![],
+            epsBatteryMin: 10,
+        }
+    }
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        AppConfig::new()
+    }
 }
 
 pub fn read_config<T: DeserializeOwned>(path: &str) -> T {

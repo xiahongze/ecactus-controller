@@ -1,0 +1,16 @@
+# ~/.config/systemd/user/ecactus-controller.service
+[Unit]
+Description=ecactus-controller
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/apps/ecactus-controller
+ExecStart=%h/apps/ecactus-controller/ecactus_controller
+User=pi
+Group=pi
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

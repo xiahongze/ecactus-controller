@@ -1,0 +1,34 @@
+### GET charge mode
+GET {{baseUrl}}/charge-mode
+
+### Reset charge mode
+PUT {{baseUrl}}/charge-mode/reset
+
+### Set charge mode to self-sufficient
+POST {{baseUrl}}/charge-mode
+Content-Type: application/json
+
+{
+  "mode": "self-sufficient",
+  "battery_level": 10
+}
+
+### Set charge mode to conservative
+POST {{baseUrl}}/charge-mode
+Content-Type: application/json
+
+{
+  "mode": "conservative",
+  "battery_level": 25,
+  "duration": 1
+}
+
+### Set charge mode to active
+POST {{baseUrl}}/charge-mode
+Content-Type: application/json
+
+{
+  "mode": "active",
+  "side_load": 800,
+  "duration": 1
+}

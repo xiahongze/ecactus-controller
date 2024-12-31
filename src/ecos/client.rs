@@ -17,10 +17,11 @@ pub struct EcosClient {
     retries: u8,
 }
 
+#[macro_export]
 macro_rules! make_struct_with_time_device_info {
     ($struct_name:ident, $($field_name:ident: $field_value:expr),*) => {
         $struct_name {
-            _t: Self::get_epoch_time(),
+            _t: EcosClient::get_epoch_time(),
             clientType: "BROWSER".to_string(),
             clientVersion: "1.0".to_string(),
             $(
@@ -43,6 +44,7 @@ macro_rules! make_query_with_time_device_info {
     };
 }
 
+#[allow(dead_code)]
 impl EcosClient {
     pub fn new(user: String, password: String, base_url: String) -> Self {
         EcosClient {
@@ -62,7 +64,7 @@ impl EcosClient {
             .as_millis() as u64
     }
 
-    pub async fn login(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn login(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let login_request = make_struct_with_time_device_info!(
             LoginRequest,
             email: self.user.clone(),
@@ -100,7 +102,7 @@ impl EcosClient {
     async fn retry_request<F>(
         &self,
         req_builder_func: F,
-    ) -> Result<Response, Box<dyn std::error::Error>>
+    ) -> Result<Response, Box<dyn std::error::Error + Send + Sync>>
     where
         F: Fn() -> reqwest::RequestBuilder,
     {
@@ -137,7 +139,9 @@ impl EcosClient {
         }
     }
 
-    pub async fn get_devices(&self) -> Result<DevicesResponse, Box<dyn std::error::Error>> {
+    pub async fn get_devices(
+        &self,
+    ) -> Result<DevicesResponse, Box<dyn std::error::Error + Send + Sync>> {
         let res = self
             .retry_request(|| {
                 self.client
@@ -154,7 +158,7 @@ impl EcosClient {
     pub async fn get_run_data(
         &self,
         device_id: String,
-    ) -> Result<RunDataResponse, Box<dyn std::error::Error>> {
+    ) -> Result<RunDataResponse, Box<dyn std::error::Error + Send + Sync>> {
         let run_data_request = make_struct_with_time_device_info!(
             RunDataRequest,
             deviceId: device_id
@@ -176,7 +180,7 @@ impl EcosClient {
     pub async fn get_charge_mode_settings(
         &self,
         device_id: &str,
-    ) -> Result<ChargeModeSettingsResponse, Box<dyn std::error::Error>> {
+    ) -> Result<ChargeModeSettingsResponse, Box<dyn std::error::Error + Send + Sync>> {
         let res = self
             .retry_request(|| {
                 self.client
@@ -193,7 +197,7 @@ impl EcosClient {
     pub async fn post_charge_mode_settings(
         &self,
         charge_mode_settings_request: ChargeModeSettingsRequest,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let res = self
             .retry_request(|| {
                 self.client
@@ -224,7 +228,7 @@ mod tests {
             std::env::var("ECOS_PASSWORD").unwrap_or_else(|_| "password".to_string()),
             "https://api-ecos-au.weiheng-tech.com/api".to_string(),
         );
-        /// Set the token to the value of the APP_TOKEN environment variable to test the APIs
+        // Set the token to the value of the APP_TOKEN environment variable to test the APIs
         client
             .token
             .lock()

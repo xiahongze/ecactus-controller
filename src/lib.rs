@@ -1,4 +1,4 @@
 pub mod config;
-pub mod models;
+pub mod ecos;
 pub mod routes;
 pub mod state;

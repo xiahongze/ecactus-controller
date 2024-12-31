@@ -4,5 +4,12 @@ password = "password"
 base_url = "https://api-ecos-au.weiheng-tech.com/api"
 
 [app]
-default_mode = "self-sufficient"
-default_battery_level = 10
+deviceId = "123456"
+checkInterval = 900
+chargeUseMode = 0
+minCapacity = 10
+maxFeedIn = 100
+dischargeToGridFlag = 0
+chargingList = []
+dischargingList = []
+epsBatteryMin = 10
