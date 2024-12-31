@@ -1,16 +1,22 @@
-# ~/.config/systemd/user/ecactus-controller.service
+# Install location: /etc/systemd/system/ecactus-controller.service
+# systemctl enable ecactus-controller.service
+# systemctl start ecactus-controller.service
 [Unit]
 Description=ecactus-controller
+DefaultDependencies=no
 After=network.target
+After=systemd-user-sessions.service
+After=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/apps/ecactus-controller
-ExecStart=%h/apps/ecactus-controller/ecactus_controller
 User=pi
 Group=pi
+WorkingDirectory=/home/pi/apps/ecactus-controller
+ExecStart=/home/pi/apps/ecactus-controller/ecactus_controller
 Restart=always
 RestartSec=10s
 
 [Install]
 WantedBy=multi-user.target
+

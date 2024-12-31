@@ -20,7 +20,7 @@ Content-Type: application/json
 {
   "mode": "conservative",
   "battery_level": 25,
-  "duration": 1
+  "duration": 60
 }
 
 ### Set charge mode to active
@@ -29,6 +29,6 @@ Content-Type: application/json
 
 {
   "mode": "active",
-  "side_load": 800,
-  "duration": 1
+  "side_load": 50,
+  "duration": 60
 }
