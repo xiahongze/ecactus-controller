@@ -29,6 +29,15 @@ Content-Type: application/json
 
 {
   "mode": "active",
-  "side_load": 50,
+  "side_load": 800,
   "duration": 60
 }
+
+### GET devices
+GET {{baseUrl}}/ecos/devices
+
+### GET run-data
+GET {{baseUrl}}/ecos/run-data
+
+### GET charge-mode-settings
+GET {{baseUrl}}/ecos/charge-mode-settings

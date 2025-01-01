@@ -2,8 +2,7 @@ use crate::state::AppState;
 use crate::state::ChargeMode;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
-use rocket::State;
-use rocket::{get, post, put};
+use rocket::{get, post, put, routes, State};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize)]
@@ -39,4 +38,8 @@ pub async fn reset_mode(state: &State<Arc<AppState>>) -> Json<Message> {
 pub async fn get_mode(state: &State<Arc<AppState>>) -> Json<ChargeMode> {
     let current_mode = state.current_mode.lock().await.clone();
     Json(current_mode)
+}
+
+pub fn routes() -> Vec<rocket::Route> {
+    routes![set_mode, reset_mode, get_mode]
 }
