@@ -83,6 +83,23 @@ impl AppState {
         battery_level: Option<i32>,
         side_load: Option<u32>,
     ) {
+        let charge_power = if charge_use_mode == 0 {
+            self.compute_charge_power(side_load.unwrap_or(0))
+                .await
+                .unwrap_or(0.0)
+        } else {
+            0.0
+        };
+        let charging_list = if charge_power.abs() > 0.0 {
+            info!(target: "app", "Charge/Discharge power: {} W", charge_power);
+            vec![ChargeSchedule::from_now(
+                (self.app_config.checkInterval / 60) as i64,
+                charge_power.abs() as i32,
+            )]
+        } else {
+            vec![]
+        };
+
         let res = self
             .ecos_client
             .post_charge_mode_settings(make_struct_with_time_device_info!(
@@ -92,15 +109,8 @@ impl AppState {
                 minCapacity: battery_level.unwrap_or(self.app_config.minCapacity),
                 maxFeedIn: self.app_config.maxFeedIn,
                 dischargeToGridFlag: self.app_config.dischargeToGridFlag,
-                chargingList: if charge_use_mode == 0 {self.app_config.chargingList.clone()} else {
-                    let charge_power = self.compute_charge_power(side_load.unwrap_or(0)).await.unwrap_or(0.0);
-                    info!(target: "app", "Charge power: {} W", charge_power);
-                    vec![ChargeSchedule::from_now(
-                        (self.app_config.checkInterval / 60) as i64,
-                        charge_power as i32,
-                    )]
-                },
-                dischargingList: self.app_config.dischargingList.clone(),
+                chargingList: if charge_power > 0.0 { charging_list.clone() } else { self.app_config.chargingList.clone() },
+                dischargingList: if charge_power < 0.0 { charging_list } else { self.app_config.dischargingList.clone() },
                 epsBatteryMin: self.app_config.epsBatteryMin
             ))
             .await;
@@ -166,7 +176,7 @@ impl AppState {
     /// This is a simplified implementation that only works for my home configuration
     /// where I have two identical PV inverters and one of them is connected to the battery.
     /// The side load is the power consumed by the house that is not monitored by the battery.
-    /// Charge power is non-negative and capped at 5000W.
+    /// Charge/Discharge power is non-negative and capped at 5000W.
     pub async fn compute_charge_power(
         &self,
         side_load: u32,
@@ -179,6 +189,7 @@ impl AppState {
             .await?;
         let total_pv = run_data.data.solarPower * 2.0;
         let total_load = run_data.data.homePower + run_data.data.epsPower + side_load as f32;
-        Ok(f32::max(f32::min(5000.0, total_pv - total_load), 0.0))
+        let net_power = total_pv - total_load;
+        Ok(net_power.clamp(-5000.0, 5000.0))
     }
 }
