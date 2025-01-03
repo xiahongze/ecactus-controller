@@ -20,8 +20,9 @@ pub enum ChargeMode {
     },
     #[serde(rename = "active")]
     Active {
-        side_load: u32, // in watts
-        duration: u64,  // in minutes
+        side_load: u32,              // in watts
+        duration: u64,               // in minutes
+        check_interval: Option<u64>, // in seconds
     },
     #[serde(rename = "self-sufficient")]
     SelfSufficient { battery_level: u8 },
@@ -73,7 +74,7 @@ impl AppState {
         })
         .await;
 
-        self.update_charge_mode(0, Some(self.app_config.minCapacity), None)
+        self.update_charge_mode(0, Some(self.app_config.minCapacity), None, None)
             .await;
     }
 
@@ -82,8 +83,9 @@ impl AppState {
         charge_use_mode: i32,
         battery_level: Option<i32>,
         side_load: Option<u32>,
+        check_interval: Option<u64>,
     ) {
-        let charge_power = if charge_use_mode == 0 {
+        let charge_power = if charge_use_mode == 1 {
             self.compute_charge_power(side_load.unwrap_or(0))
                 .await
                 .unwrap_or(0.0)
@@ -91,9 +93,10 @@ impl AppState {
             0.0
         };
         let charging_list = if charge_power.abs() > 0.0 {
+            let check_interval = check_interval.unwrap_or(self.app_config.checkInterval);
             info!(target: "app", "Charge/Discharge power: {} W", charge_power);
             vec![ChargeSchedule::from_now(
-                (self.app_config.checkInterval / 60) as i64,
+                (check_interval / 60) as i64,
                 charge_power.abs() as i32,
             )]
         } else {
@@ -132,7 +135,7 @@ impl AppState {
                 ChargeMode::SelfSufficient { battery_level } => {
                     info!(target: "app", "Self-sufficient mode: {}%", battery_level);
                     state_clone
-                        .update_charge_mode(0, Some(battery_level as i32), None)
+                        .update_charge_mode(0, Some(battery_level as i32), None, None)
                         .await;
                 }
                 ChargeMode::Conservative {
@@ -141,7 +144,7 @@ impl AppState {
                 } => {
                     info!(target: "app", "Conservative mode: {}%, {} mins", battery_level, duration);
                     state_clone
-                        .update_charge_mode(0, Some(battery_level as i32), None)
+                        .update_charge_mode(0, Some(battery_level as i32), None, None)
                         .await;
                     tokio::time::sleep(Duration::from_secs(duration * 60)).await;
                     info!(target: "app", "Conservative mode expired");
@@ -150,16 +153,17 @@ impl AppState {
                 ChargeMode::Active {
                     duration,
                     side_load,
+                    check_interval,
                 } => {
                     info!(target: "app", "Active mode: side-load {} W, {} mins", side_load, duration);
                     let now = Instant::now();
                     let expiration = now + Duration::from_secs(duration * 60);
                     while Instant::now() < expiration {
                         state_clone
-                            .update_charge_mode(1, None, Some(side_load))
+                            .update_charge_mode(1, None, Some(side_load), check_interval)
                             .await;
                         tokio::time::sleep(Duration::from_secs(
-                            state_clone.app_config.checkInterval,
+                            check_interval.unwrap_or(state_clone.app_config.checkInterval),
                         ))
                         .await;
                         info!(target: "app", "Active mode: {} min left", expiration.duration_since(Instant::now()).as_secs() / 60);

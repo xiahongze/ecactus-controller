@@ -30,7 +30,8 @@ Content-Type: application/json
 {
   "mode": "active",
   "side_load": 800,
-  "duration": 60
+  "duration": 60,
+  "check_interval": 600
 }
 
 ### GET devices

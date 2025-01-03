@@ -5,7 +5,7 @@ base_url = "https://api-ecos-au.weiheng-tech.com/api"
 
 [app]
 deviceId = "123456"
-checkInterval = 900
+checkInterval = 600
 chargeUseMode = 0
 minCapacity = 10
 maxFeedIn = 100
