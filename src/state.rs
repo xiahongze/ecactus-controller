@@ -191,6 +191,11 @@ impl AppState {
             .ecos_client
             .get_run_data(self.app_config.deviceId.clone())
             .await?;
+        if run_data.data.batterySoc < 0.01 {
+            // NOTE: the server is returning null data. We do not want to modify the charging behavior.
+            warn!("Battery SOC is too low (potentially disconnected from the server)");
+            return Ok(0.0);
+        }
         let total_pv = run_data.data.solarPower * 2.0;
         let total_load = run_data.data.homePower + run_data.data.epsPower + side_load as f32;
         let net_power = total_pv - total_load;
