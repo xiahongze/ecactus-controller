@@ -111,7 +111,7 @@ impl AppState {
                 chargeUseMode: charge_use_mode,
                 minCapacity: battery_level.unwrap_or(self.app_config.minCapacity),
                 maxFeedIn: self.app_config.maxFeedIn,
-                dischargeToGridFlag: self.app_config.dischargeToGridFlag,
+                dischargeToGridFlag: if charge_power < 0.0 { 1 } else { self.app_config.dischargeToGridFlag },
                 chargingList: if charge_power > 0.0 { charging_list.clone() } else { self.app_config.chargingList.clone() },
                 dischargingList: if charge_power < 0.0 { charging_list } else { self.app_config.dischargingList.clone() },
                 epsBatteryMin: self.app_config.epsBatteryMin
@@ -199,6 +199,18 @@ impl AppState {
         let total_pv = run_data.data.solarPower * 2.0;
         let total_load = run_data.data.homePower + run_data.data.epsPower + side_load as f32;
         let net_power = total_pv - total_load;
-        Ok(net_power.clamp(-5000.0, 5000.0))
+        // if net_power is positive, it is a charge power (to the battery)
+        // otherwise, it is a discharge power, which we need to subtract PV power from net power
+        // so that it is the total discharge power from the inverter
+        let charge_power = if net_power > 0.0 {
+            net_power
+        } else {
+            net_power - run_data.data.solarPower
+        };
+        let charge_power = charge_power.clamp(-5000.0, 5000.0);
+
+        info!(target: "app", "Total PV: {} W, Total Load: {} W, Net Power: {} W, Charge Power: {} W", total_pv, total_load, net_power, charge_power);
+
+        Ok(charge_power)
     }
 }
